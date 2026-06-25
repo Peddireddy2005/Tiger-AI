@@ -57,15 +57,18 @@ export default function ChatInput() {
     setMessage("");
 
     // Read files as base64 for backend processing
-    const attachments = await Promise.all(
-      files.map(async (f) => ({
-        name: f.name,
-        mimeType: f.mimeType,
-        size: f.size,
-        base64: await readFileAsBase64(f.file),
-      }))
-    );
-    setFiles([]);
+    // frontend/src/components/chat/ChatInput.jsx — inside handleSubmit
+  const attachments = await Promise.all(
+    files.map(async (f) => ({
+    name: f.name,
+    mimeType: f.mimeType,
+    size: f.size,
+    base64: await readFileAsBase64(f.file),
+    type: f.mimeType.startsWith("image/") ? "image" : "other", // ADD
+    data: f.preview || null, // ADD: reuse the blob preview URL for optimistic render
+  }))
+);
+setFiles([]);
 
     let convId = currentConversation?._id;
     if (!convId) {

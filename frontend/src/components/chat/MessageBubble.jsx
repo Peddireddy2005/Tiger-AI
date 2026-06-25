@@ -24,14 +24,26 @@ function CopyBtn({ text }) {
 }
 
 const mdComponents = {
-  code({ inline, className, children, ...props }) {
+  code({ className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || "");
     const code = String(children).replace(/\n$/, "");
-    if (!inline && match) {
+    const isBlock = match || code.includes("\n"); // detect block by content, not the removed `inline` prop
+    if (isBlock) {
       return (
         <div className="code-block">
-          <div className="code-header"><span className="code-lang">{match[1]}</span><CopyBtn text={code} /></div>
-          <SyntaxHighlighter style={codeTheme} language={match[1]} PreTag="div" useInlineStyles {...props}>{code}</SyntaxHighlighter>
+          <div className="code-header">
+            <span className="code-lang">{match ? match[1] : "text"}</span>
+            <CopyBtn text={code} />
+          </div>
+          <SyntaxHighlighter
+            style={codeTheme}
+            language={match ? match[1] : "text"}
+            PreTag="div"
+            useInlineStyles
+            {...props}
+          >
+            {code}
+          </SyntaxHighlighter>
         </div>
       );
     }

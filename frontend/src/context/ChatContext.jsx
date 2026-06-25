@@ -75,37 +75,36 @@ export function ChatProvider({ children }) {
     }
   };
 
-  const sendChatMessage = async (content, attachments = [], convId = null) => {
-    const id = convId || currentConversation?._id;
-    if (!id || isGenerating) return;
+const sendChatMessage = async (content, attachments = [], convId = null) => {
+  const id = convId || currentConversation?._id;
+  if (!id || isGenerating) return;
 
-    const tempId = `temp-${Date.now()}`;
+  const tempId = `temp-${Date.now()}`;
+  setMessages((p) => [
+    ...p,
+    { _id: tempId, role: "user", content, attachments, createdAt: new Date().toISOString() },
+  ]);
+  setIsGenerating(true);
+
+  try {
+    // only send what the backend actually needs
+    const payloadAttachments = attachments.map(({ name, mimeType, size, base64 }) => ({ name, mimeType, size, base64 }));
+    const res = await sendMessage({ conversationId: id, content, attachments: payloadAttachments });
+    const { userMessage, assistantMessage, conversation } = res.data;
     setMessages((p) => [
-      ...p,
-      { _id: tempId, role: "user", content, attachments, createdAt: new Date().toISOString() },
+      ...p.filter((m) => m._id !== tempId),
+      userMessage,
+      assistantMessage,
     ]);
-    setIsGenerating(true);
-
-    try {
-      const res = await sendMessage({ conversationId: id, content, attachments });
-      const { userMessage, assistantMessage, conversation } = res.data;
-      setMessages((p) => [
-        ...p.filter((m) => m._id !== tempId),
-        userMessage,
-        assistantMessage,
-      ]);
-      setConversations((p) =>
-        p.map((c) => c._id === conversation._id ? conversation : c)
-      );
-      setCurrentConversation(conversation);
-    } catch (err) {
-      console.error(err);
-      setMessages((p) => p.filter((m) => m._id !== tempId));
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
+    setConversations((p) => p.map((c) => c._id === conversation._id ? conversation : c));
+    setCurrentConversation(conversation);
+  } catch (err) {
+    console.error(err);
+    setMessages((p) => p.filter((m) => m._id !== tempId));
+  } finally {
+    setIsGenerating(false);
+  }
+};
   const renameChat = async (id, title) => {
     try {
       const res = await updateConversation(id, { title });

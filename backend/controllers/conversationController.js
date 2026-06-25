@@ -18,11 +18,16 @@ const getConversations = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const searchConversations = async (req, res) => {
   try {
     const q = req.query.q?.trim() || "";
     if (!q) return res.json([]);
-    const c = await Conversation.find({ user: req.user, title: { $regex: q, $options: "i" } }).sort({ updatedAt: -1 }).limit(20);
+    const c = await Conversation.find({
+      user: req.user,
+      title: { $regex: escapeRegex(q), $options: "i" },
+    }).sort({ updatedAt: -1 }).limit(20);
     res.json(c);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
