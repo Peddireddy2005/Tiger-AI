@@ -3,12 +3,13 @@ import { useChat } from "../../context/ChatContext";
 
 const ACCEPTED = "image/*,.pdf,.txt,.md,.js,.jsx,.ts,.tsx,.py,.json,.csv,.html,.css,.sh,.yaml,.yml,.xml";
 
-const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(reader.result.split(",")[1]);
-  reader.onerror = reject;
-  reader.readAsDataURL(file);
-});
+const readFileAsBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 export default function ChatInput() {
   const [message, setMessage] = useState("");
@@ -35,7 +36,13 @@ export default function ChatInput() {
       selected.slice(0, 5 - files.length).map(async (file) => {
         const isImage = file.type.startsWith("image/");
         const preview = isImage ? URL.createObjectURL(file) : null;
-        return { file, preview, name: file.name, mimeType: file.type, size: file.size };
+        return {
+          file,
+          preview,
+          name: file.name,
+          mimeType: file.type,
+          size: file.size,
+        };
       })
     );
     setFiles((p) => [...p, ...newFiles].slice(0, 5));
@@ -54,21 +61,25 @@ export default function ChatInput() {
   const handleSubmit = async () => {
     const content = message.trim();
     if ((!content && files.length === 0) || isGenerating) return;
+
     setMessage("");
 
-    // Read files as base64 for backend processing
-    // frontend/src/components/chat/ChatInput.jsx — inside handleSubmit
-  const attachments = await Promise.all(
-    files.map(async (f) => ({
-    name: f.name,
-    mimeType: f.mimeType,
-    size: f.size,
-    base64: await readFileAsBase64(f.file),
-    type: f.mimeType.startsWith("image/") ? "image" : "other", // ADD
-    data: f.preview || null, // ADD: reuse the blob preview URL for optimistic render
-  }))
-);
-setFiles([]);
+    // Build attachment payloads — include base64 for backend + type/data for optimistic UI
+    const attachments = await Promise.all(
+      files.map(async (f) => {
+        const base64 = await readFileAsBase64(f.file);
+        return {
+          name: f.name,
+          mimeType: f.mimeType,
+          size: f.size,
+          base64,
+          // Fields used only for the optimistic (temporary) UI message:
+          type: f.mimeType.startsWith("image/") ? "image" : "other",
+          data: f.preview || null,
+        };
+      })
+    );
+    setFiles([]);
 
     let convId = currentConversation?._id;
     if (!convId) {
@@ -76,6 +87,7 @@ setFiles([]);
       if (!conv) return;
       convId = conv._id;
     }
+
     await sendChatMessage(content, attachments, convId);
   };
 
@@ -152,13 +164,9 @@ setFiles([]);
             onKeyDown={handleKeyDown}
             disabled={isGenerating}
           />
-          <button
-            className="send-btn"
-            onClick={handleSubmit}
-            disabled={!canSend}
-          >
+          <button className="send-btn" onClick={handleSubmit} disabled={!canSend}>
             {isGenerating ? (
-              <span className="spinner-sm" />
+              <span className="spinner-sm" style={{ borderTopColor: "#fff" }} />
             ) : (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <line x1="22" y1="2" x2="11" y2="13"/>
@@ -201,9 +209,7 @@ setFiles([]);
               </svg>
               {isRecording ? "Stop" : "Voice"}
             </button>
-            {recordError && (
-              <span className="record-error">{recordError}</span>
-            )}
+            {recordError && <span className="record-error">{recordError}</span>}
           </div>
           <span className="input-hint">Enter · Shift+Enter for new line</span>
         </div>

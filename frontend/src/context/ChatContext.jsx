@@ -8,7 +8,6 @@ import { useAuth } from "./AuthContext";
 
 const ChatContext = createContext();
 
-// FIX: named export only — fixes react-refresh/only-export-components
 export function ChatProvider({ children }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
@@ -26,7 +25,7 @@ export function ChatProvider({ children }) {
       const res = await getConversations();
       setConversations(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("loadConversations error:", err);
     } finally {
       setLoading(false);
     }
@@ -51,84 +50,108 @@ export function ChatProvider({ children }) {
     return () => { cancelled = true; };
   }, [user, loadConversations, clearAll]);
 
-  const newConversation = async (options = {}) => {
+  // Creates a new conversation, sets it as active, and returns it.
+  // Safe to call multiple times — always awaits the server response.
+  const newConversation = useCallback(async (options = {}) => {
     try {
       const res = await createConversation(options);
-      setConversations((p) => [res.data, ...p]);
-      setCurrentConversation(res.data);
+      const conv = res.data;
+      setConversations((prev) => [conv, ...prev]);
+      setCurrentConversation(conv);
       setMessages([]);
-      return res.data;
+      return conv;
     } catch (err) {
-      console.error(err);
+      console.error("newConversation error:", err);
       return null;
     }
-  };
+  }, []);
 
-  const openConversation = async (conv) => {
+  const openConversation = useCallback(async (conv) => {
     try {
       setCurrentConversation(conv);
       setMessages([]);
       const res = await getMessages(conv._id);
       setMessages(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("openConversation error:", err);
     }
-  };
+  }, []);
 
-const sendChatMessage = async (content, attachments = [], convId = null) => {
-  const id = convId || currentConversation?._id;
-  if (!id || isGenerating) return;
+  const sendChatMessage = useCallback(async (content, attachments = [], convId = null) => {
+    const id = convId || currentConversation?._id;
+    if (!id || isGenerating) return;
 
-  const tempId = `temp-${Date.now()}`;
-  setMessages((p) => [
-    ...p,
-    { _id: tempId, role: "user", content, attachments, createdAt: new Date().toISOString() },
-  ]);
-  setIsGenerating(true);
+    const tempId = `temp-${Date.now()}`;
 
-  try {
-    // only send what the backend actually needs
-    const payloadAttachments = attachments.map(({ name, mimeType, size, base64 }) => ({ name, mimeType, size, base64 }));
-    const res = await sendMessage({ conversationId: id, content, attachments: payloadAttachments });
-    const { userMessage, assistantMessage, conversation } = res.data;
-    setMessages((p) => [
-      ...p.filter((m) => m._id !== tempId),
-      userMessage,
-      assistantMessage,
+    // Optimistic UI: show the user message immediately
+    setMessages((prev) => [
+      ...prev,
+      {
+        _id: tempId,
+        role: "user",
+        content,
+        // For display: keep preview URLs in optimistic message
+        attachments: attachments.map(({ name, mimeType, size, type, data }) => ({
+          name, mimeType, size, type, data,
+        })),
+        createdAt: new Date().toISOString(),
+      },
     ]);
-    setConversations((p) => p.map((c) => c._id === conversation._id ? conversation : c));
-    setCurrentConversation(conversation);
-  } catch (err) {
-    console.error(err);
-    setMessages((p) => p.filter((m) => m._id !== tempId));
-  } finally {
-    setIsGenerating(false);
-  }
-};
-  const renameChat = async (id, title) => {
+    setIsGenerating(true);
+
+    try {
+      // Only send what the backend needs (strip out blob preview URLs etc.)
+      const payloadAttachments = attachments.map(({ name, mimeType, size, base64 }) => ({
+        name, mimeType, size, base64,
+      }));
+
+      const res = await sendMessage({ conversationId: id, content, attachments: payloadAttachments });
+      const { userMessage, assistantMessage, conversation } = res.data;
+
+      setMessages((prev) => [
+        ...prev.filter((m) => m._id !== tempId),
+        userMessage,
+        assistantMessage,
+      ]);
+
+      // Update the conversation in the sidebar (title may have changed)
+      setConversations((prev) =>
+        prev.map((c) => (c._id === conversation._id ? conversation : c))
+      );
+      setCurrentConversation(conversation);
+    } catch (err) {
+      console.error("sendChatMessage error:", err);
+      // Roll back the optimistic message
+      setMessages((prev) => prev.filter((m) => m._id !== tempId));
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [currentConversation, isGenerating]);
+
+  const renameChat = useCallback(async (id, title) => {
     try {
       const res = await updateConversation(id, { title });
-      setConversations((p) => p.map((c) => c._id === id ? res.data : c));
+      setConversations((prev) => prev.map((c) => (c._id === id ? res.data : c)));
       if (currentConversation?._id === id) setCurrentConversation(res.data);
     } catch (err) { console.error(err); }
-  };
+  }, [currentConversation]);
 
-  const deleteChat = async (id) => {
+  const deleteChat = useCallback(async (id) => {
     try {
       await deleteConversation(id);
-      setConversations((p) => p.filter((c) => c._id !== id));
+      setConversations((prev) => prev.filter((c) => c._id !== id));
       if (currentConversation?._id === id) {
         setCurrentConversation(null);
         setMessages([]);
       }
     } catch (err) { console.error(err); }
-  };
+  }, [currentConversation]);
 
-  const pinChat = async (id, pinned) => {
+  const pinChat = useCallback(async (id, pinned) => {
     try {
       const res = await updateConversation(id, { pinned });
-      setConversations((p) => {
-        const updated = p.map((c) => c._id === id ? res.data : c);
+      setConversations((prev) => {
+        const updated = prev.map((c) => (c._id === id ? res.data : c));
         return updated.sort(
           (a, b) =>
             (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) ||
@@ -137,40 +160,37 @@ const sendChatMessage = async (content, attachments = [], convId = null) => {
       });
       if (currentConversation?._id === id) setCurrentConversation(res.data);
     } catch (err) { console.error(err); }
-  };
+  }, [currentConversation]);
 
-  const changeMode = async (id, mode) => {
+  const changeMode = useCallback(async (id, mode) => {
     try {
       const res = await updateConversation(id, { mode });
-      setConversations((p) => p.map((c) => c._id === id ? res.data : c));
+      setConversations((prev) => prev.map((c) => (c._id === id ? res.data : c)));
       if (currentConversation?._id === id) setCurrentConversation(res.data);
     } catch (err) { console.error(err); }
-  };
+  }, [currentConversation]);
 
-  const changeModel = async (id, model) => {
+  const changeModel = useCallback(async (id, model) => {
     try {
       const res = await updateConversation(id, { model });
-      setConversations((p) => p.map((c) => c._id === id ? res.data : c));
+      setConversations((prev) => prev.map((c) => (c._id === id ? res.data : c)));
       if (currentConversation?._id === id) setCurrentConversation(res.data);
     } catch (err) { console.error(err); }
-  };
+  }, [currentConversation]);
 
-  const mergeChats = async (sourceId, targetId) => {
+  const mergeChats = useCallback(async (sourceId, targetId) => {
     try {
       const res = await mergeConversations(sourceId, targetId);
       await loadConversations();
-      if (
-        currentConversation?._id === sourceId ||
-        currentConversation?._id === targetId
-      ) {
+      if (currentConversation?._id === sourceId || currentConversation?._id === targetId) {
         setCurrentConversation(res.data.conversation);
         setMessages(res.data.messages);
       }
       return res.data;
     } catch (err) { console.error(err); throw err; }
-  };
+  }, [currentConversation, loadConversations]);
 
-  const splitChat = async (convId, messageId) => {
+  const splitChat = useCallback(async (convId, messageId) => {
     try {
       const res = await splitConversation(convId, messageId);
       await loadConversations();
@@ -180,22 +200,20 @@ const sendChatMessage = async (content, attachments = [], convId = null) => {
       }
       return res.data;
     } catch (err) { console.error(err); throw err; }
-  };
+  }, [currentConversation, loadConversations]);
 
-  const shareChat = async (id, share) => {
+  const shareChat = useCallback(async (id, share) => {
     try {
       const res = await shareConversation(id, share);
-      setConversations((p) =>
-        p.map((c) => c._id === id ? res.data.conversation : c)
+      setConversations((prev) =>
+        prev.map((c) => (c._id === id ? res.data.conversation : c))
       );
-      if (currentConversation?._id === id) {
-        setCurrentConversation(res.data.conversation);
-      }
+      if (currentConversation?._id === id) setCurrentConversation(res.data.conversation);
       return res.data;
     } catch (err) { console.error(err); throw err; }
-  };
+  }, [currentConversation]);
 
-  const handleSearch = async (q) => {
+  const handleSearch = useCallback(async (q) => {
     setSearchQuery(q);
     if (!q.trim()) {
       setSearchResults([]);
@@ -211,7 +229,7 @@ const sendChatMessage = async (content, attachments = [], convId = null) => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
 
   return (
     <ChatContext.Provider value={{
@@ -226,7 +244,6 @@ const sendChatMessage = async (content, attachments = [], convId = null) => {
   );
 }
 
-// FIX: export hook separately
 export function useChat() {
   return useContext(ChatContext);
 }

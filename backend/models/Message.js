@@ -11,7 +11,7 @@ const attachmentSchema = new mongoose.Schema({
 const messageSchema = new mongoose.Schema({
   conversation: { type: mongoose.Schema.Types.ObjectId, ref: "Conversation", required: true },
   role: { type: String, enum: ["user", "assistant"], required: true },
-  content: { type: String, required: true },
+  content: { type: String, default: "" },   // NOT required — attachments-only messages are valid
   attachments: [attachmentSchema],
 }, { timestamps: true });
 
