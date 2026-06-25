@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getSharedChat } from "../api/chatApi";
-import AuraIcon from "../components/common/AuraIcon";
+import TigerIcon from "../components/common/TigerIcon";
 
 export default function SharedChat() {
   const { shareId } = useParams();
@@ -25,28 +25,28 @@ export default function SharedChat() {
   if (loading) return <div className="shared-loading"><div className="spinner" /></div>;
   if (error) return (
     <div className="shared-error">
-      <AuraIcon size={48} />
+      <TigerIcon size={48} />
       <h2>{error}</h2>
-      <Link to="/login" className="shared-cta">Try Aura AI →</Link>
+      <Link to="/login" className="shared-cta">Try Tiger AI →</Link>
     </div>
   );
 
   return (
     <div className="shared-page">
       <div className="shared-header">
-        <div className="shared-brand"><AuraIcon size={28} /><span>Aura AI</span></div>
+        <div className="shared-brand"><TigerIcon size={28} /><span>Tiger AI</span></div>
         <div className="shared-meta">
           <span className="shared-title">{data.conversation.title}</span>
           <span className="shared-badge">Shared conversation</span>
         </div>
-        <Link to="/register" className="shared-cta-small">Try Aura AI free →</Link>
+        <Link to="/register" className="shared-cta-small">Try Tiger AI free →</Link>
       </div>
 
       <div className="shared-messages">
         {data.messages.map((msg) => (
           <div key={msg._id} className={`shared-msg ${msg.role}`}>
             <div className="shared-msg-avatar">
-              {msg.role === "assistant" ? <AuraIcon size={28} /> : <span>U</span>}
+              {msg.role === "assistant" ? <TigerIcon size={28} /> : <span>U</span>}
             </div>
             <div className="shared-msg-body">
               {msg.role === "assistant" ? (

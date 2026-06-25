@@ -2,7 +2,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import AuraIcon from "../common/AuraIcon";
+import TigerIcon from "../common/TigerIcon";
 import { useAuth } from "../../context/AuthContext";
 
 const codeTheme = {
@@ -68,7 +68,7 @@ export default function MessageBubble({ message }) {
   return (
     <div className={`message ${isUser ? "user" : "assistant"}`}>
       {!isUser && (
-        <div className="msg-avatar aura-av"><AuraIcon size={32} /></div>
+        <div className="msg-avatar tiger-av"><TigerIcon size={32} /></div>
       )}
       <div className="msg-body">
         {isUser ? (

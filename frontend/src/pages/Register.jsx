@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import AuraIcon from "../components/common/AuraIcon";
+import TigerIcon from "../components/common/TigerIcon";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
 
@@ -39,11 +39,11 @@ export default function Register() {
     <div className="auth-page">
       <div className="auth-left">
         <div className="auth-left-top">
-          <div className="auth-left-logo"><AuraIcon size={34} /><span>Aura AI</span></div>
+          <div className="auth-left-logo"><TigerIcon size={34} /><span>Tiger AI</span></div>
         </div>
         <div className="auth-left-center">
           <h1 className="auth-left-headline">One AI.<br /><span className="grad">Infinite uses.</span></h1>
-          <p className="auth-left-sub">Join developers, students and professionals who use Aura AI every day to code faster and think clearer.</p>
+          <p className="auth-left-sub">Join developers, students and professionals who use Tiger AI every day to code faster and think clearer.</p>
           <div className="auth-feat-grid">
             {FEATURES.map((f) => (
               <div className="auth-feat-card" key={f.title}>
@@ -62,8 +62,8 @@ export default function Register() {
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-brand">
-            <div className="auth-brand-icon"><AuraIcon size={38} /></div>
-            <span>Aura AI</span>
+            <div className="auth-brand-icon"><TigerIcon size={38} /></div>
+            <span>Tiger AI</span>
           </div>
           <h1 className="auth-title">Create account</h1>
           <p className="auth-subtitle">Start your AI-powered journey today</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useChat } from "../../context/ChatContext";
 import MessageBubble from "./MessageBubble";
-import AuraIcon from "../common/AuraIcon";
+import TigerIcon from "../common/TigerIcon";
 
 const SUGGESTIONS = [
   { icon: "💻", text: "Write a React component" },
@@ -45,7 +45,7 @@ export default function ChatWindow() {
     <div className="chat-window">
       {messages.length === 0 && (
         <div className="empty-chat">
-          <div className="empty-icon"><AuraIcon size={64} /></div>
+          <div className="empty-icon"><TigerIcon size={64} /></div>
           <h2>{welcome.title}</h2>
           <p>{welcome.sub}</p>
           {!currentConversation && (
@@ -67,7 +67,7 @@ export default function ChatWindow() {
         {messages.map((msg) => <MessageBubble key={msg._id} message={msg} />)}
         {isGenerating && (
           <div className="message assistant">
-            <div className="msg-avatar aura-av"><AuraIcon size={32} /></div>
+            <div className="msg-avatar tiger-av"><TigerIcon size={32} /></div>
             <div className="msg-body">
               <div className="assistant-card">
                 <div className="typing-dots"><span /><span /><span /></div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import AuraIcon from "../components/common/AuraIcon";
+import TigerIcon from "../components/common/TigerIcon";
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
 
@@ -36,8 +36,8 @@ export default function Login() {
       <div className="auth-left">
         <div className="auth-left-top">
           <div className="auth-left-logo">
-            <AuraIcon size={34} />
-            <span>Aura AI</span>
+            <TigerIcon size={34} />
+            <span>Tiger AI</span>
           </div>
         </div>
         <div className="auth-left-center">
@@ -59,8 +59,8 @@ export default function Login() {
               <div className="auth-preview-text">Build me a REST API in Node.js</div>
             </div>
             <div className="auth-preview-msg">
-              <div className="auth-preview-avatar aura">✦</div>
-              <div className="auth-preview-text aura">I'll create a complete Express REST API with auth, validation and best practices...</div>
+              <div className="auth-preview-avatar tiger">✦</div>
+              <div className="auth-preview-text tiger">I'll create a complete Express REST API with auth, validation and best practices...</div>
             </div>
           </div>
         </div>
@@ -73,8 +73,8 @@ export default function Login() {
       <div className="auth-right">
         <div className="auth-card">
           <div className="auth-brand">
-            <div className="auth-brand-icon"><AuraIcon size={38} /></div>
-            <span>Aura AI</span>
+            <div className="auth-brand-icon"><TigerIcon size={38} /></div>
+            <span>Tiger AI</span>
           </div>
           <h1 className="auth-title">Welcome back</h1>
           <p className="auth-subtitle">Sign in to your workspace</p>

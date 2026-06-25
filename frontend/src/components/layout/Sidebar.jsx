@@ -3,7 +3,7 @@ import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../context/AuthContext";
 import ConversationItem from "../conversation/ConversationItem";
 import MergeModal from "../modals/MergeModal";
-import AuraIcon from "../common/AuraIcon";
+import TigerIcon from "../common/TigerIcon";
 
 function groupByDate(conversations) {
   const now = new Date();
@@ -39,7 +39,7 @@ export default function Sidebar() {
     <>
       <aside className="sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-brand"><AuraIcon size={26} /><span className="brand-name">Aura</span></div>
+          <div className="sidebar-brand"><TigerIcon size={26} /><span className="brand-name">Tiger</span></div>
           <button className="new-chat-btn" onClick={() => newConversation()} title="New chat">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

@@ -23,7 +23,7 @@ const buildMessages = (messages, model, systemPrompt) => {
   ];
 };
 
-const generateResponse = async (messages, model = DEFAULT_MODEL, systemPrompt = "You are Aura AI.") => {
+const generateResponse = async (messages, model = DEFAULT_MODEL, systemPrompt = "You are Tiger AI.") => {
   try {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -33,7 +33,7 @@ const generateResponse = async (messages, model = DEFAULT_MODEL, systemPrompt = 
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
           "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:5173",
-          "X-Title": "Aura AI",
+          "X-Title": "Tiger AI",
         },
         timeout: 90000,
       }

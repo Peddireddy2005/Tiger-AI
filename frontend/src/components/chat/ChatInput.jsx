@@ -143,7 +143,7 @@ export default function ChatInput() {
           <textarea
             ref={textareaRef}
             rows={1}
-            placeholder="Ask Aura anything..."
+            placeholder="Ask Tiger anything..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
