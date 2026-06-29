@@ -27,6 +27,7 @@ export default function App() {
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/share/:shareId" element={<SharedChat />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

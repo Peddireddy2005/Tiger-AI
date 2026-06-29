@@ -24,10 +24,7 @@ const searchConversations = async (req, res) => {
   try {
     const q = req.query.q?.trim() || "";
     if (!q) return res.json([]);
-    const c = await Conversation.find({
-      user: req.user,
-      title: { $regex: escapeRegex(q), $options: "i" },
-    }).sort({ updatedAt: -1 }).limit(20);
+    const c = await Conversation.find({ user: req.user, title: { $regex: escapeRegex(q), $options: "i" } }).sort({ updatedAt: -1 }).limit(20);
     res.json(c);
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
@@ -36,10 +33,10 @@ const updateConversation = async (req, res) => {
   try {
     const { title, mode, model, pinned } = req.body;
     const update = {};
-    if (title !== undefined) update.title = title.slice(0, 100);
-    if (mode !== undefined) update.mode = mode;
-    if (model !== undefined) update.model = model;
-    if (pinned !== undefined) update.pinned = pinned;
+    if (title   !== undefined) update.title   = title.slice(0, 100);
+    if (mode    !== undefined) update.mode    = mode;
+    if (model   !== undefined) update.model   = model;
+    if (pinned  !== undefined) update.pinned  = pinned;
     const c = await Conversation.findOneAndUpdate({ _id: req.params.id, user: req.user }, update, { new: true });
     if (!c) return res.status(404).json({ message: "Not found" });
     res.json(c);
@@ -99,13 +96,8 @@ const shareConversation = async (req, res) => {
     const { share } = req.body;
     const c = await Conversation.findOne({ _id: req.params.id, user: req.user });
     if (!c) return res.status(404).json({ message: "Not found" });
-    if (share) {
-      if (!c.shareId) c.shareId = crypto.randomBytes(16).toString("hex");
-      c.isShared = true;
-    } else {
-      c.isShared = false;
-      c.shareId = null;
-    }
+    if (share) { if (!c.shareId) c.shareId = crypto.randomBytes(16).toString("hex"); c.isShared = true; }
+    else { c.isShared = false; c.shareId = null; }
     await c.save();
     res.json({ conversation: c, shareId: c.shareId });
   } catch (err) { res.status(500).json({ message: err.message }); }

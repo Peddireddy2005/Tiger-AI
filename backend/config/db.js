@@ -1,22 +1,11 @@
 const mongoose = require("mongoose");
-
 const connectDB = async () => {
   try {
-    console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-
-    const uri = process.env.MONGO_URI;
-    console.log(
-      "URI starts with:",
-      uri ? uri.substring(0, 40) : "undefined"
-    );
-
-    await mongoose.connect(uri);
-
-    console.log("MongoDB Connected");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB connected");
   } catch (err) {
-    console.error("Mongo Error:", err);
+    console.error("MongoDB error:", err.message);
     process.exit(1);
   }
 };
-
 module.exports = connectDB;

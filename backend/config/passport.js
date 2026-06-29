@@ -2,7 +2,7 @@ const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs"); // ADD THIS
+const bcrypt = require("bcryptjs");
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -18,8 +18,7 @@ passport.use(new GoogleStrategy({
         user.avatar = profile.photos[0]?.value;
         await user.save();
       } else {
-        const randomPassword = Math.random().toString(36) + Date.now().toString(36);
-        const hashed = await bcrypt.hash(randomPassword, 10); // HASH IT
+        const hashed = await bcrypt.hash(Math.random().toString(36) + Date.now(), 10);
         user = await User.create({
           name: profile.displayName,
           email: profile.emails[0].value,
@@ -31,7 +30,5 @@ passport.use(new GoogleStrategy({
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     return done(null, { user, token });
-  } catch (err) {
-    return done(err, null);
-  }
+  } catch (err) { return done(err, null); }
 }));

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
+const BACKEND_URL =
+  import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:3001";
 
 export default function BackendWakeup() {
   const [sleeping, setSleeping] = useState(false);
@@ -8,22 +9,23 @@ export default function BackendWakeup() {
   useEffect(() => {
     let attempts = 0;
     let timeoutId = null;
+    let stopped = false;
 
     const check = async () => {
       try {
         const res = await fetch(`${BACKEND_URL}/health`, {
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(3500),
         });
         if (res.ok) {
-          setSleeping(false);
+          if (!stopped) setSleeping(false);
           return;
         }
       } catch {
-        // still waking up — no-op, handled below
+        // still waking up
       }
 
       attempts++;
-      if (attempts >= 20) {
+      if (attempts >= 25 || stopped) {
         setSleeping(false);
         return;
       }
@@ -32,8 +34,8 @@ export default function BackendWakeup() {
     };
 
     check();
-
     return () => {
+      stopped = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
@@ -45,8 +47,7 @@ export default function BackendWakeup() {
       <div className="wakeup-inner">
         <span className="wakeup-spinner" />
         <span>
-          Backend is starting up (~30s on free tier).
-          Your message will send automatically once ready.
+          Backend is starting up (~30s on free tier). Your message will send once ready.
         </span>
       </div>
     </div>

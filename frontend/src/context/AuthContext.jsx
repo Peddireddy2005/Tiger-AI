@@ -3,8 +3,6 @@ import { loginUser, registerUser, getProfile } from "../api/authApi";
 
 const AuthContext = createContext();
 
-// FIX: export AuthProvider as named export only (not default)
-// This fixes the react-refresh/only-export-components warning
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +59,8 @@ export function AuthProvider({ children }) {
   );
 }
 
-// FIX: export hook separately — satisfies react-refresh/only-export-components
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }

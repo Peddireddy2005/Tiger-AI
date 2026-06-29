@@ -12,13 +12,17 @@ export default function ShareModal({ conversation, shareChat, onClose }) {
   const shareLink = shareId ? `${FRONTEND_URL}/share/${shareId}` : "";
 
   const toggleShare = async () => {
-    setLoading(true); setError("");
+    setLoading(true);
+    setError("");
     try {
       const res = await shareChat(conversation._id, !shared);
       setShared(!shared);
       setShareId(res.shareId || null);
-    } catch { setError("Failed to update share settings."); }
-    finally { setLoading(false); }
+    } catch {
+      setError("Failed to update share settings. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyLink = async () => {
@@ -37,26 +41,37 @@ export default function ShareModal({ conversation, shareChat, onClose }) {
         </div>
 
         <p className="modal-desc">
-          Share this conversation publicly. Anyone with the link can view it (read-only).
+          Share this conversation as a public read-only link. Anyone with the link can view it.
         </p>
 
         {error && <div className="modal-error">{error}</div>}
 
         <div className="share-toggle-row">
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>Public link</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)" }}>
+              Public link
+            </div>
             <div style={{ fontSize: 12, color: "var(--text-4)", marginTop: 2 }}>
-              {shared ? "Anyone with the link can view" : "Sharing is disabled"}
+              {shared ? "Anyone with the link can view" : "Sharing is currently disabled"}
             </div>
           </div>
-          <button className={`share-toggle-btn ${shared ? "on" : "off"}`} onClick={toggleShare} disabled={loading}>
-            {loading ? <span className="spinner-sm dark" /> : (shared ? "On" : "Off")}
+          <button
+            className={`share-toggle-btn ${shared ? "on" : "off"}`}
+            onClick={toggleShare}
+            disabled={loading}
+          >
+            {loading ? <span className="spinner-sm dark" /> : shared ? "On" : "Off"}
           </button>
         </div>
 
         {shared && shareLink && (
           <div className="share-link-row">
-            <input className="share-link-input" value={shareLink} readOnly onClick={(e) => e.target.select()} />
+            <input
+              className="share-link-input"
+              value={shareLink}
+              readOnly
+              onClick={(e) => e.target.select()}
+            />
             <button className="btn-accent" onClick={copyLink}>
               {copied ? "✓ Copied!" : "Copy link"}
             </button>

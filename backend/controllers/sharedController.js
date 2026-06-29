@@ -1,6 +1,5 @@
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
-
 const getSharedChat = async (req, res) => {
   try {
     const conversation = await Conversation.findOne({ shareId: req.params.shareId, isShared: true });
@@ -9,5 +8,4 @@ const getSharedChat = async (req, res) => {
     res.json({ conversation, messages });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
-
 module.exports = { getSharedChat };

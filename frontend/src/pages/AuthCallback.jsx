@@ -10,8 +10,11 @@ export default function AuthCallback() {
   useEffect(() => {
     if (handled.current) return;
     handled.current = true;
+
     const p = new URLSearchParams(window.location.search);
-    const token = p.get("token"), id = p.get("id");
+    const token = p.get("token");
+    const id = p.get("id");
+
     if (token && id) {
       loginWithTokenAndUser(token, {
         id,
@@ -25,5 +28,10 @@ export default function AuthCallback() {
     }
   }, [loginWithTokenAndUser, navigate]);
 
-  return <div className="full-center"><div className="spinner" /></div>;
+  return (
+    <div className="full-center">
+      <div className="spinner" />
+      <span style={{ color: "var(--text-3)", fontSize: 14 }}>Signing you in…</span>
+    </div>
+  );
 }
