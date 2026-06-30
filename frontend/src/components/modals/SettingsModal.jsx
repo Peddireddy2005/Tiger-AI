@@ -37,6 +37,7 @@ export default function SettingsModal({ onClose }) {
   const [showTokens, setShowTokens] = useState(() => localStorage.getItem("tiger-show-tokens") !== "false");
   const [compactMode, setCompactMode] = useState(() => localStorage.getItem("tiger-compact") === "true");
   const [copied, setCopied]       = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const applyFontSize = (size) => {
     setFontSize(size);
@@ -72,6 +73,18 @@ export default function SettingsModal({ onClose }) {
     await navigator.clipboard.writeText(info);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const resetSettings = () => {
+    if (!confirm("Reset appearance & behavior settings to defaults?")) return;
+    setResetting(true);
+    ["tiger-font-size", "tiger-send-key", "tiger-show-tokens", "tiger-compact"].forEach((k) =>
+      localStorage.removeItem(k)
+    );
+    document.documentElement.style.removeProperty("--chat-font-size");
+    document.documentElement.removeAttribute("data-compact");
+    // Leave theme as-is — resetting theme on every "reset" tends to surprise users
+    window.location.reload();
   };
 
   return (
@@ -136,7 +149,7 @@ export default function SettingsModal({ onClose }) {
 
           {/* Export */}
           <Section title="Export">
-            <Row label="Export Chat" hint={currentConversation ? `"${currentConversation.title}"` : "Open a chat first"}>
+            <Row label="Export Chat" hint={currentConversation ? currentConversation.title : "Open a chat first"}>
               <div className="settings-btn-group">
                 <button
                   className="settings-action-btn"
@@ -184,6 +197,11 @@ export default function SettingsModal({ onClose }) {
             <Row label="System Info">
               <button className="settings-action-btn" onClick={copySystemInfo}>
                 {copied ? "✓ Copied" : "Copy Info"}
+              </button>
+            </Row>
+            <Row label="Reset Settings" hint="Restore default appearance & behavior">
+              <button className="settings-action-btn danger" onClick={resetSettings} disabled={resetting}>
+                {resetting ? "Resetting…" : "Reset"}
               </button>
             </Row>
           </Section>

@@ -20,6 +20,7 @@ export function ChatProvider({ children }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [exportError, setExportError] = useState("");
   const abortRef = useRef(null);
 
   const loadConversations = useCallback(async () => {
@@ -198,21 +199,34 @@ export function ChatProvider({ children }) {
     } catch (err) { console.error(err); }
   }, []);
 
+  // FIXED: previously this would call res.blob() even on a failed request,
+  // silently downloading a tiny JSON-error file named like a real export.
   const exportChat = useCallback(async (format = "markdown") => {
     if (!currentConversation?._id) return;
+    setExportError("");
     const token = localStorage.getItem("token");
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
-    const res = await fetch(`${apiBase}/messages/export/${currentConversation._id}?format=${format}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const blob = await res.blob();
-    const ext = format === "markdown" ? "md" : "json";
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${currentConversation.title.replace(/[^a-z0-9]/gi, "_")}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const res = await fetch(`${apiBase}/messages/export/${currentConversation._id}?format=${format}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        let message = "Export failed";
+        try { message = (await res.json())?.message || message; } catch { /* non-JSON error body */ }
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const ext = format === "markdown" ? "md" : "json";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${currentConversation.title.replace(/[^a-z0-9]/gi, "_")}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Export error:", err);
+      setExportError(err.message || "Export failed. Please try again.");
+    }
   }, [currentConversation]);
 
   const renameChat   = async (id, title) => { try { const res = await updateConversation(id, { title }); setConversations((p) => p.map((c) => c._id === id ? res.data : c)); if (currentConversation?._id === id) setCurrentConversation(res.data); } catch (err) { console.error(err); } };
@@ -230,6 +244,7 @@ export function ChatProvider({ children }) {
       conversations, currentConversation, messages, loading,
       isGenerating, streamingContent, tokenUsage,
       searchQuery, searchResults, isSearching,
+      exportError,
       loadConversations, newConversation, openConversation,
       sendChatMessage, stopGeneration, regenerateLastResponse,
       starMessage, exportChat,
